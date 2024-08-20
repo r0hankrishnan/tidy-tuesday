@@ -35,6 +35,38 @@ for(i in cols){
 
 # Clean up column values (remove (?), ?, -)
 
+## Programmatic solution
+
+```{r}
+df2 <- monarchData
+
+removeChars <- function(data){
+  cols <- colnames(data)
+  for(i in cols){
+    colList <- data[,i]
+    colList <- gsub("(?)", "", colList, fixed = TRUE)
+    
+    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
+      colList <- gsub("?", NA, colList, fixed = TRUE)
+    } else{
+      colList <- gsub("?", "", colList, fixed = TRUE)
+    }
+    
+    colList <- gsub("–", NA, colList, fixed = TRUE)
+    
+    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
+      data[,i] <- as.numeric(colList)
+    } else{
+      data[,i] <- colList
+    }
+  }
+  return(data)
+}
+
+df3 <- removeChars(df2)
+
+```
+
 ## Brute force solution
 
 ```{r}
@@ -70,34 +102,9 @@ consort_age <- gsub("–", NA, consort_age, fixed = TRUE)
 df$consort_age <- as.numeric(consort_age)
 ```
 
-## Programmatic solution
-
 ```{r}
-df2 <- monarchData
-
-removeChars <- function(data){
-  cols <- colnames(data)
-  for(i in cols){
-    colList <- data[,i]
-    colList <- gsub("(?)", "", colList, fixed = TRUE)
-    
-    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
-      colList <- gsub("?", NA, colList, fixed = TRUE)
-    } else{
-      colList <- gsub("?", "", colList, fixed = TRUE)
-    }
-    
-    colList <- gsub("–", NA, colList, fixed = TRUE)
-    
-    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
-      data[,i] <- as.numeric(colList)
-    } else{
-      data[,i] <- colList
-    }
-  }
-  return(data)
-}
-
-df3 <- removeChars(df2)
-
+df3 %>% 
+  mutate(age_diff = king_age - consort_age) %>%
+  ggplot(aes(x = king_age, y = age_diff)) + geom_point()
 ```
+
