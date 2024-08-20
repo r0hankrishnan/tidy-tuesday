@@ -1,0 +1,103 @@
+---
+title: "Tidy Tuesday"
+author: "Rohan Krishnan"
+date: "2024-08-20"
+output: html_document
+---
+
+# Load data and basic looks
+
+```{r}
+library(tidyverse)
+
+tuesdata <- tidytuesdayR::tt_load('2024-08-20')
+monarchData <- tuesdata[1]
+
+monarchData %>% as.data.frame() %>% glimpse()
+
+monarchData <- as.data.frame(monarchData) %>%
+  rename( "king_name" = english_monarchs_marriages_df.king_name,
+          "king_age" = english_monarchs_marriages_df.king_age,
+          "consort_name" = english_monarchs_marriages_df.consort_name,
+          "consort_age" = english_monarchs_marriages_df.consort_age,
+          "marriage_year" = english_monarchs_marriages_df.year_of_marriage
+          )
+
+monarchData %>% dim()
+
+#Look at unique values of columns -- need to do some cleaning
+cols <- monarchData %>% colnames()
+for(i in cols){
+  print(paste(i, ":"))
+  print(unique(monarchData[,i]))
+}
+```
+
+# Clean up column values (remove (?), ?, -)
+
+## Brute force solution
+
+```{r}
+df <- monarchData
+#gsub not working properly so I'm gonna do a work around
+marriage_year <- df$marraige_year
+marriage_year <- gsub("(?)", "", marriage_year, fixed = TRUE)
+marriage_year <- gsub("–", NA, marriage_year, fixed = TRUE)
+marriage_year <- gsub("?", NA, marriage_year, fixed = TRUE)
+#marriage_year %>% unique()
+df$marriage_year <- as.numeric(marriage_year)
+
+#repeat process for king age
+king_age <- df$king_age
+king_age <- gsub("(?)", "", king_age, fixed = TRUE)
+king_age <- gsub("–", NA, king_age, fixed = TRUE)
+king_age <- gsub("?", NA, king_age, fixed = TRUE)
+#king_age %>% unique()
+df$king_age <- as.numeric(king_age)
+
+#repeat for consort name
+consort_name <- df$consort_name
+consort_name <- gsub("–", NA, consort_name, fixed = TRUE)
+consort_name <- gsub("?", "", consort_name, fixed = TRUE)
+#consort_name %>% unique()
+df$consort_name <- consort_name
+
+#repeat for consort age
+consort_age <- df$consort_age
+consort_age <- gsub("?", NA, consort_age, fixed = TRUE)
+consort_age <- gsub("–", NA, consort_age, fixed = TRUE)
+#consort_age %>% unique()
+df$consort_age <- as.numeric(consort_age)
+```
+
+## Programmatic solution
+
+```{r}
+df2 <- monarchData
+
+removeChars <- function(data){
+  cols <- colnames(data)
+  for(i in cols){
+    colList <- data[,i]
+    colList <- gsub("(?)", "", colList, fixed = TRUE)
+    
+    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
+      colList <- gsub("?", NA, colList, fixed = TRUE)
+    } else{
+      colList <- gsub("?", "", colList, fixed = TRUE)
+    }
+    
+    colList <- gsub("–", NA, colList, fixed = TRUE)
+    
+    if(i == "consort_age" | i == "king_age" | i == "marriage_year"){
+      data[,i] <- as.numeric(colList)
+    } else{
+      data[,i] <- colList
+    }
+  }
+  return(data)
+}
+
+df3 <- removeChars(df2)
+
+```
