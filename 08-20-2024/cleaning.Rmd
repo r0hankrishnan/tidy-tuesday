@@ -9,6 +9,8 @@ output: html_document
 
 ```{r}
 library(tidyverse)
+library(ggthemes)
+library(gridExtra)
 
 tuesdata <- tidytuesdayR::tt_load('2024-08-20')
 monarchData <- tuesdata[1]
@@ -103,8 +105,61 @@ df$consort_age <- as.numeric(consort_age)
 ```
 
 ```{r}
-df3 %>% 
+ageDiffPlot <- df3 %>% 
   mutate(age_diff = king_age - consort_age) %>%
-  ggplot(aes(x = king_age, y = age_diff)) + geom_point()
+  ggplot(aes(x = king_age, y = age_diff)) + geom_point() + 
+  labs(title = "King Age vs Age Difference Between King and Consort (Yikes...)",
+       subtitle = "Looks like the older kings were still picking pretty young women.",
+       x = "Age of King", 
+       y = "Age Difference (Yrs.) Between King and Consort") + 
+  ggthemes::theme_clean(); ageDiffPlot
+ 
+avg_consort_age <- mean(df3$consort_age, na.rm = T)
+consortVsKingPlot <- df3 %>%
+  mutate(age_diff = king_age - consort_age) %>%
+  ggplot(aes(x = king_age, y = consort_age, size = age_diff)) + 
+  geom_point(alpha = 0.6) + 
+  geom_hline(yintercept = mean(avg_consort_age), alpha = 0.6, color = "blue") + 
+  annotate("text", x = 7, y = 22, label = "Average Consort Age", size = 3) + 
+  ylim(0,60) + 
+  xlim(0,60) +
+  labs(title = "King Age vs Consort Age",
+       subtitle = "Most kings (regardless of age) chose 20 year old consorts (yikes...).",
+       size = "Age Difference",
+       x = "King Age",
+       y = "Consort Age") + 
+  ggthemes:: theme_clean();consortVsKingPlot
+
+gridExtra::grid.arrange(ageDiffPlot, consortVsKingPlot, nrow = 1)
+```
+
+```{r}
+df3 %>%
+  group_by(marriage_year) %>%
+  summarize(avg_king_age = mean(king_age, na.rm = TRUE),
+            avg_consort_age = mean(consort_age, na.rm = TRUE)) %>%
+  mutate(avg_diff = avg_king_age - avg_consort_age) %>%
+  ggplot(aes(x = marriage_year, y = avg_king_age, color = avg_diff)) + 
+  geom_line(lineend = "round", linewidth = 1) +
+  labs(title = "King Ages Over Time",
+       subtitle = "Some oscillation between larger and smaller age gaps?",
+       x = "Marriage Year",
+       y = "Average King Age",
+       color = "Age Difference") + 
+  ggthemes::theme_clean()
+
+df3 %>%
+  group_by(marriage_year) %>%
+  summarize(avg_king_age = mean(king_age, na.rm = TRUE),
+            avg_consort_age = mean(consort_age, na.rm = TRUE)) %>%
+  mutate(avg_diff = avg_king_age - avg_consort_age) %>%
+  ggplot(aes(x = marriage_year, y = avg_consort_age, color = avg_king_age)) + 
+  geom_line(linewidth = 1, lineend = "round") +
+  labs(title = "Consort Ages Over Time",
+       subtitle = "Chosen consorts got (slightly) older over time", 
+       x = "Marriage Year",
+       y = "Average Consort Age",
+       color = "King Age") + 
+  ggthemes::theme_clean()
 ```
 
