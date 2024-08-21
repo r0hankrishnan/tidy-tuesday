@@ -3,4 +3,4 @@ This repo will contain my work on the tidy tuesday datasets. Tidy tuesday datase
 
 |Date|Topic|
 |----|-----|
-|08-20-2024|[English Monarchs & Marriages](https://github.com/r0hankrishnan/tidy-tuesday)|
+|08-20-2024|[English Monarchs & Marriages](https://github.com/r0hankrishnan/tidy-tuesday/tree/main/08-20-2024)|
