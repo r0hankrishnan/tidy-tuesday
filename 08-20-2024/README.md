@@ -1,1 +1,1 @@
-![plot1](age-diff-plot.png)
+![plot1](age-plot.png)
