@@ -1,0 +1,89 @@
+---
+title: "The Power Rangers Franchise"
+author: "Rohan Krishnan"
+date: "2024-08-27"
+output: pdf_document
+---
+
+## Load libraries
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(ggthemes)
+library(gridExtra)
+library(tidytuesdayR)
+library(lubridate)
+```
+
+## Load data
+```{r}
+# Option 1: tidytuesdayR package 
+## install.packages("tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2024-08-27')
+
+power_rangers_episodes <- tuesdata$power_rangers_episodes
+power_rangers_seasons <- tuesdata$power_rangers_seasons
+```
+
+## Basic look at the data:
+
+### First, the episode data:
+```{r}
+#Copy df
+episodes <- power_rangers_episodes
+
+#Df shape
+episodes %>% dim() #921 x 7
+
+#Glimpse
+episodes %>% glimpse()
+
+#Extract column names
+episode_cols <- episodes %>% colnames(); episode_cols
+
+#Look at column types
+sapply(episodes, typeof)
+
+#Fix column data types
+episodes$episode_num <- as.numeric(power_rangers_episodes$episode_num)
+episodes$IMDB_rating <- as.numeric(power_rangers_episodes$IMDB_rating)
+episodes$total_votes <- as.numeric(power_rangers_episodes$total_votes)
+
+#Summary
+summary(episodes)
+```
+
+### Now, the season data:
+```{r}
+#Copy df
+seasons <- power_rangers_seasons %>% as.data.frame()
+
+#Df shape
+seasons %>% dim() #28 x 7
+
+#Glimpse
+episodes %>% glimpse()
+
+#Extract column names
+season_cols <- seasons %>% colnames(); season_cols
+
+#Look at column types
+sapply(seasons, typeof)
+
+#Summary
+summary(episodes)
+```
+
+## Basic visualizations
+
+### Episodes 
+```{r}
+max_date <- episodes$air_date[episodes$IMDB_rating == max(episodes$IMDB_rating)]
+min_date <- episodes$air_date[episodes$IMDB_rating == min(episodes$IMDB_rating)]
+episodes %>% ggplot(aes(x = air_date, y = IMDB_rating)) + 
+  geom_line(lineend = "round") + 
+  annotate(x = ymd(max_date), y = max(episodes$IMDB_rating) + 0.3, label = episodes$episode_title[episodes$air_date==max_date], vjust = 2, geom = "text", size = 2) + 
+  annotate(x = ymd(min_date), y = min(episodes$IMDB_rating) - 0.1, label = episodes$episode_title[episodes$air_date==min_date], vjust = 2, geom = "text", size = 2)
+
+```
+
